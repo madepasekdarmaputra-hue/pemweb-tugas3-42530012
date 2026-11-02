@@ -1,0 +1,91 @@
+
+const db = require('../config/database');
+
+const ProdukModel = {
+    // Mengambil seluruh data produk
+    getAll: async () => {
+        const [rows] = await db.query(
+            'SELECT * FROM produk ORDER BY id DESC'
+        );
+        return rows;
+    },
+
+    // Menambahkan produk baru
+    create: async (data) => {
+        const sql = `
+            INSERT INTO produk (nama_produk, kategori, harga, stok)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        const [result] = await db.query(sql, [
+            data.nama_produk,
+            data.kategori,
+            data.harga,
+            data.stok
+        ]);
+
+        return result;
+    },
+
+    // Mengambil produk berdasarkan ID
+    getById: async (id) => {
+        const [rows] = await db.query(
+            'SELECT * FROM produk WHERE id = ?',
+            [id]
+        );
+        return rows[0];
+    },
+
+    // Memperbarui data produk
+    update: async (id, data) => {
+        const sql = `
+            UPDATE produk
+            SET nama_produk = ?, kategori = ?, harga = ?, stok = ?
+            WHERE id = ?
+        `;
+
+        const [result] = await db.query(sql, [
+            data.nama_produk,
+            data.kategori,
+            data.harga,
+            data.stok,
+            id
+        ]);
+
+        return result;
+    },
+
+    // Menghapus produk berdasarkan ID
+    delete: async (id) => {
+        const sql = 'DELETE FROM produk WHERE id = ?';
+        const [result] = await db.query(sql, [id]);
+        return result;
+    },
+
+    // METODE TIDAK AMAN UNTUK EKSPERIMEN LABORATORIUM
+    getByKategoriInsecure: async (kategoriInput) => {
+        const rawSql = `SELECT * FROM produk WHERE kategori = '${kategoriInput}'`;
+
+        console.log('\n[RAW VULNERABLE SQL QUERY]:', rawSql);
+
+        const [rows] = await db.query(rawSql);
+        return rows;
+    },
+
+    // METODE AMAN MENGGUNAKAN PARAMETER
+    getByKategoriSecure: async (kategoriInput) => {
+        const secureSql = 'SELECT * FROM produk WHERE kategori = ?';
+
+        console.log(
+            '\n[PREPARED STATEMENT QUERY]:',
+            secureSql,
+            'WITH VALUE:',
+            [kategoriInput]
+        );
+
+        const [rows] = await db.query(secureSql, [kategoriInput]);
+        return rows;
+    }
+};
+
+module.exports = ProdukModel;
